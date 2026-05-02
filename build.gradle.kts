@@ -20,6 +20,11 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
+}
+
+
 application {
     mainClass.set("de.seuhd.worldcup.MainKt")
 }
