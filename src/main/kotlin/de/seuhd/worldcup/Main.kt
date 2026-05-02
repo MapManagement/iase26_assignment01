@@ -26,7 +26,7 @@ Choose an option (1 to 5) :
 
         when (userInput) {
             1 -> showStandings(data.groups)
-            2 -> println("2")
+            2 -> showMatches(data.groups)
             3 -> println("3")
             4 -> println("4")
             5 -> println("5")
@@ -193,7 +193,29 @@ private fun printGroupStandings(group: Group) {
    2) Show Matches
    ------------------------------------------------------------- */
 private fun showMatches(allGroups: List<Group>) {
-    //TODO
+    println("Which group's matches do you want to see?")
+    val userInput = readln()
+
+    val chosenGroup = allGroups.firstOrNull { it.name.equals(userInput, ignoreCase = true) }
+    if (chosenGroup == null) {
+        println("Group '$userInput' not found. Available groups: ${allGroups.joinToString { it.name }}")
+        return
+    }
+
+    for (match in chosenGroup.matches) {
+        println(match.round)
+        println("#${match.matchId} ${match.homeTeam} vs. ${match.awayTeam}")
+        println("- ${match.date}")
+        if (match.homeScore == null || match.awayScore == null) {
+            println("- To be started")
+        } else {
+            println("- ${match.homeScore}:${match.awayScore}")
+        }
+        println("- ${match.ground}")
+        println("=====")
+    }
+
+
 }
 
 /* -------------------------------------------------------------
