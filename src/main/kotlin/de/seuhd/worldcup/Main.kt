@@ -1,8 +1,27 @@
 package de.seuhd.worldcup
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
+
+
 fun main() {
-    //TODO: Load JSON data
+    val data = loadWorldCupData()
+    println("Loaded '${data.tournament}' with ${data.groups.size} groups and ${data.knockouts.size} knockout matches")
+
     //TODO: Implement interactive menu
+}
+
+private fun loadWorldCupData(): WorldCupData {
+    val jsonText = object {}.javaClass.getResource("/world_cup_2026_full_data.json")
+        ?.readText()
+        ?: error("Resource /world_cup_2026_full_data.json not found (expected under src/main/resources)")
+
+    val json = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = false
+    }
+
+    return json.decodeFromString(jsonText)
 }
 
 /* -------------------------------------------------------------
