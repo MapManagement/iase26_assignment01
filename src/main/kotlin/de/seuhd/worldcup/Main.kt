@@ -8,6 +8,8 @@ fun main() {
     val data = loadWorldCupData()
     println("Loaded '${data.tournament}' with ${data.groups.size} groups and ${data.knockouts.size} knockout matches")
 
+    var bets = mutableMapOf<Int, Int>()
+
     //TODO: Implement interactive menu
     val menuText = """
 ===== FIFA World Cup 2026 ? Betting Console =====
@@ -27,7 +29,7 @@ Choose an option (1 to 5) :
         when (userInput) {
             1 -> showStandings(data.groups)
             2 -> showMatches(data.groups)
-            3 -> println("3")
+            3 -> placeBets(data.groups, bets)
             4 -> println("4")
             5 -> println("5")
             null -> println("Wrong input")
@@ -214,15 +216,40 @@ private fun showMatches(allGroups: List<Group>) {
         println("- ${match.ground}")
         println("=====")
     }
-
-
 }
 
 /* -------------------------------------------------------------
    3) Place Bets
    ------------------------------------------------------------- */
-private fun placeBets(allGroups: List<Group>) {
-    //TODO
+private fun placeBets(allGroups: List<Group>, bets: MutableMap<Int, Int>) {
+    println("On which group do you want to bet?")
+    val userInput = readln()
+
+    val chosenGroup = allGroups.firstOrNull { it.name.equals(userInput, ignoreCase = true) }
+    if (chosenGroup == null) {
+        println("Group '$userInput' not found. Available groups: ${allGroups.joinToString { it.name }}")
+        return
+    }
+
+    for (match in chosenGroup.matches) {
+        println(match.round)
+        println("#${match.matchId} ${match.homeTeam} vs. ${match.awayTeam}")
+        println("- ${match.date}")
+        println("- ${match.ground}")
+        println("Enter 1 for a Home Win, 2 for an Away Win or 0 for a Draw:")
+
+        val userInput = readln().toIntOrNull()
+        if (userInput == null || userInput < 0 || userInput > 2) {
+            println("You have to either enter a 1, a 2 or a 0.")
+            return
+        }
+
+        bets[match.matchId] = userInput
+
+        println("=====")
+
+    }
+
 }
 
 /* -------------------------------------------------------------
