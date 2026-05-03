@@ -30,8 +30,8 @@ Choose an option (1 to 5) :
             1 -> showStandings(data.groups)
             2 -> showMatches(data.groups)
             3 -> placeBets(data.groups, bets)
-            4 -> println("4")
-            5 -> println("5")
+            4 -> showBettingScore(data.groups, bets)
+            5 -> return
             null -> println("Wrong input")
             else -> println("There are only 5 actions to choose from")
         }
@@ -126,29 +126,33 @@ private fun printGroupStandings(group: Group) {
     val table = group.teams.associate { it.id to MutableStandingRow(it) }.toMutableMap()
 
     for (match in group.matches) {
-        val hs = match.homeScore
-        val as_ = match.awayScore
-        if (hs == null || as_ == null) continue
+        if (match.homeScore == null || match.awayScore == null) {
+            continue
+        }
 
-        val home = table.getOrPut(match.homeTeam) { MutableStandingRow(Team(match.homeTeam, match.homeTeam)) }
-        val away = table.getOrPut(match.awayTeam) { MutableStandingRow(Team(match.awayTeam, match.awayTeam)) }
+        val home = table.getOrPut(match.homeTeam) {
+            MutableStandingRow(Team(match.homeTeam, match.homeTeam))
+        }
+        val away = table.getOrPut(match.awayTeam) {
+            MutableStandingRow(Team(match.awayTeam, match.awayTeam))
+        }
 
         home.played++
         away.played++
 
-        home.goalsFor += hs
-        home.goalsAgainst += as_
-        away.goalsFor += as_
-        away.goalsAgainst += hs
+        home.goalsFor += match.homeScore
+        home.goalsAgainst += match.awayScore
+        away.goalsFor += match.awayScore
+        away.goalsAgainst += match.homeScore
 
         when {
-            hs > as_ -> {
+            match.homeScore > match.awayScore -> {
                 home.wins++
                 away.losses++
                 home.points += 3
             }
 
-            hs < as_ -> {
+            match.homeScore < match.awayScore -> {
                 away.wins++
                 home.losses++
                 away.points += 3
@@ -251,14 +255,94 @@ private fun placeBets(allGroups: List<Group>, bets: MutableMap<Int, Int>) {
         bets[match.matchId] = userInput
 
         println("=====")
-
     }
-
 }
 
 /* -------------------------------------------------------------
    4) Show Betting Score
    ------------------------------------------------------------- */
-private fun showBettingScore(allGroups: List<Group>) {
-    //TODO
+private fun showBettingScore(allGroups: List<Group>, bets: MutableMap<Int, Int>) {
+    if (bets.isEmpty()) {
+        println("No bets placed yet.")
+        return
+    }
+
+    val teamNameById = allGroups
+        .flatMap { it.teams }
+        .associateBy({ it.id }, { it.name })
+
+    val matchById = allGroups
+        .flatMap { it.matches }
+        .associateBy { it.matchId }
+
+    var totalScore = 0
+    val correctPredictions = mutableListOf<Match>()
+    val wrongPredictions = mutableListOf<Match>()
+    val pendingPredictions = mutableListOf<Match>()
+
+    for ((matchId, bet) in bets) {
+        val match = matchById[matchId] ?: continue
+
+        if (match.homeScore == null || match.awayScore == null) {
+            pendingPredictions.add(match)
+            continue
+        }
+
+        val result = calculateMatchResult(match.homeScore, match.awayScore)
+        if (result == bet) {
+            correctPredictions.add(match)
+            totalScore += 1
+        } else {
+            wrongPredictions.add(match)
+        }
+    }
+
+    println("Your total betting score: $totalScore")
+    println("Summary: Correct ${correctPredictions.size}, Incorrect ${wrongPredictions.size}, Pending ${pendingPredictions.size}")
+
+    if (correctPredictions.isNotEmpty()) {
+        println("Your correct predictions:")
+        for (match in correctPredictions) {
+            val homeName = teamNameById[match.homeTeam] ?: match.homeTeam
+            val awayName = teamNameById[match.awayTeam] ?: match.awayTeam
+            println("#${match.matchId} $homeName vs. $awayName")
+            println("Your bet: ${bets[match.matchId]}")
+            println("Result: ${match.homeScore}:${match.awayScore}")
+            println("=====")
+        }
+    }
+
+    if (wrongPredictions.isNotEmpty()) {
+        println("Your wrong predictions:")
+        for (match in wrongPredictions) {
+            val homeName = teamNameById[match.homeTeam] ?: match.homeTeam
+            val awayName = teamNameById[match.awayTeam] ?: match.awayTeam
+            println("#${match.matchId} $homeName vs. $awayName")
+            println("Your bet: ${bets[match.matchId]}")
+            println("Result: ${match.homeScore}:${match.awayScore}")
+            println("=====")
+        }
+    }
+
+    if (pendingPredictions.isNotEmpty()) {
+        println("Pending (matches not played yet):")
+        for (match in pendingPredictions) {
+            val homeName = teamNameById[match.homeTeam] ?: match.homeTeam
+            val awayName = teamNameById[match.awayTeam] ?: match.awayTeam
+            println("#${match.matchId} $homeName vs. $awayName")
+            println("Your bet: ${bets[match.matchId]}")
+            println("Result: not played yet")
+            println("=====")
+        }
+    }
+}
+
+private fun calculateMatchResult(scoreHomeTeam: Int, scoreAwayTeam: Int): Int {
+    if (scoreHomeTeam > scoreAwayTeam) {
+        return 1
+    } else if (scoreHomeTeam < scoreAwayTeam) {
+        return 2
+    } else {
+        return 0
+    }
 }
