@@ -231,9 +231,13 @@ private fun placeBets(allGroups: List<Group>, bets: MutableMap<Int, Int>) {
         return
     }
 
+    val teamNameById = chosenGroup.teams.associateBy({ it.id }, { it.name })
+
     for (match in chosenGroup.matches) {
         println(match.round)
-        println("#${match.matchId} ${match.homeTeam} vs. ${match.awayTeam}")
+        val homeName = teamNameById[match.homeTeam] ?: match.homeTeam
+        val awayName = teamNameById[match.awayTeam] ?: match.awayTeam
+        println("#${match.matchId} $homeName vs. $awayName")
         println("- ${match.date}")
         println("- ${match.ground}")
         println("Enter 1 for a Home Win, 2 for an Away Win or 0 for a Draw:")
