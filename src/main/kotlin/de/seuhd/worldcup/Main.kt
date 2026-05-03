@@ -36,7 +36,9 @@ Choose an option (1 to 5) :
             else -> println("There are only 5 actions to choose from")
         }
 
-        break
+        println()
+        print("Press Enter to continue...")
+        readlnOrNull()
     }
 }
 
